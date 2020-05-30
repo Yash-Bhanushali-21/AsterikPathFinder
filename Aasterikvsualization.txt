@@ -1,0 +1,345 @@
+A * Algorithm
+A* (pronounced as "A star") is a computer algorithm that is widely used in pathfinding and graph traversal. The algorithm efficiently plots a walkable path between multiple nodes, or points, on the graph.
+
+ A non-efficient way to find a path  
+A non-efficient way to find a path [1]
+
+On a map with many obstacles, pathfinding from points AA to BB can be difficult. A robot, for instance, without getting much other direction, will continue until it encounters an obstacle, as in the path-finding example to the left below.
+
+However, the A* algorithm introduces a heuristic into a regular graph-searching algorithm, essentially planning ahead at each step so a more optimal decision is made. With A*, a robot would instead find a path in a way similar to the diagram on the right below.
+
+A* is an extension of Dijkstra's algorithm with some characteristics of breadth-first search (BFS).
+
+
+f(n) = g(n) + h(n)
+
+g(n)=> it is the cost.
+
+A-B-C
+
+a to b cost is 1
+a to c cost is 2.
+
+h(n) => heuristic guess.
+you try to find every possible path to reach
+to an end of the road.
+
+heuristic is almost like a probabilistic guess..
+where you guess the best possible way to reach
+to end.
+
+we will be doning this using canvas.
+we 
+first create a grid which is 2 x 2
+
+
+var cols = 5;
+var rows = 5;
+var grid = new Array()
+
+function setup() {
+ createCanvas(400,400);
+ console.log('A*')
+
+for(var i=0; i<col ;i++) //creating a 2D array.
+ {
+  grid[i] = new Array(rows);
+ }
+
+//we store the cost associated,h as well for each val.
+
+for(var i=0;i<cols;i++) {
+ for(var j=0;j<rows;j++) {
+     grid[i][j] = new Spot();
+    }
+
+}
+
+creating a spot constructor:
+
+function Spot() {
+this.f =0;
+this.g = 0;
+this.h = 0;
+}
+
+A* algo is basically a continous loop.
+
+function draw() {  //this is the continous loop that runs for contious graphic render.
+ background(0);
+}
+
+
+
+
+----------------
+
+
+function removeFromArray(arr,elt) {
+ for(var i=arr.length -1 ; i>=0;i--) {
+      if(arr[i] == elt) {
+          arr.splice(i,1);  //splice method is used to delte elem at index i and 1 signifies 1 elem to be del.
+        }
+  }
+}
+
+function heuristic(a,b) {
+ return  dist(a.i,a.j,b.i,b.j);  //dist is a p5 method for euclidean dist.
+
+}
+
+var openSet = [];
+var closedSet = [];
+var start;
+var end;
+
+var cols = 5;
+var rows = 5;
+var w = width /cols; //for scaling width of cells
+var h = height / rows; //for scalling height of cells
+var grid = new Array();
+var path = [] //empty path.
+
+var noSolution = false;
+
+function setup() {
+ createCanvas(400,400);
+ console.log('A*')
+
+ 
+  function Spot(i,j) {
+    this.i =i
+    this.j =j
+    this.f =0;
+    this.g = 0;
+    this.h = 0;
+    this.neighbours = []; //for tracking neighbours of that spot
+    this.previous = undefined; //we need previous eleme for re tracking.
+    this.wall = false; //bydefault , not any spot is an obstacle.
+    if(random(1) < 0.3) //if randomly generated num is less than 0.3 then we deem it as an obstacle
+         {
+           this.wall = true;
+ 
+      }
+
+
+    this.show = (color) => {
+       fill(color);
+       if(this.wall) { //if the Spot is an obstacle, override it black in color.
+            fill(0);
+         }
+       noStroke();
+       rect(this.i * w,this.j  *h , w ,h)
+       }
+
+
+
+
+    this.addNeighbours = function(grid) { // for each spot, we keep a track of all 4 neighbour
+             var i=this.i;
+             var j=this.j;
+             if(i < cols -1 ){ //if no of total cols>your curr row, only then add elem at next row
+                this.neighbours.push(grid[i+1][j]);
+                    }
+             if(i > 0) { //cause if its already 0, you cant take prev elem.
+                this.neighbours.push(grid[i-1][j]);
+                   
+             }
+             if(j < rows-1) { //viseversa of above
+                this.neighbours.push(grid[i][j+1]);
+                       }
+             if(j>0) {  //cause if its already 0, you cant take prev elem.
+                this.neighbours.push(grid[i][j-1]);
+              }
+              //adding the 4 possible diagonal elements
+            if(i > 0 && j > 0 ){ 
+                   this.neighbours.push(grid[i-1][j-1]);
+                 }
+            if(i < cols-1 && j > 0 ){ 
+                   this.neighbours.push(grid[i+1][j-1]);
+                 }
+            if(i > 0 && j < rows -1 ){ 
+                   this.neighbours.push(grid[i-1][j+1]);
+                 }
+          if(i < cols-1 && j < rows-1 ){ 
+                   this.neighbours.push(grid[i+1][j+1]);
+                 }
+           
+   }
+
+for(var i=0; i<col ;i++) //creating a 2D array.
+ {
+  grid[i] = new Array(rows);
+ }
+
+//we store the cost associated,h as well for each val.
+
+for(var i=0;i<cols;i++) {
+ for(var j=0;j<rows;j++) {
+     grid[i][j] = new Spot(i,j); //i,j are the x and y .
+    }
+
+  }
+ start = grid[0][0];
+ end = grid[col-1][row-1]
+ start.wall = false; //making sure start is not an obstacle
+ end.wall = false;  //making sure end is not an obstacle
+
+ openSet.push(start); //we push start in openSet
+ //its almost like other traversal iterative algorithms,
+ //where we use an auxilliary ds until its empty.
+
+
+}
+
+function draw() { /*this is continous loop func */
+  if(openSet.length > 0) {
+       var winner=0; //......... [A exp below is exp.]
+       for(var i=0; i<openSet.length ; i++) 
+        {
+          if(openSet[i].f < openSet[winner].f) {
+             winner = i;
+               }
+         }
+       var current = openSet[winner]
+       if(current = end) {
+     
+                  //we reached end
+                  console.log("Hurray , we reached! ");
+         }
+       removeFromArray(openSet,current); //....[B exp belw]
+       closedSet.push(current); //pushing after deleting.
+
+       var neighbours = current.neighbours; //...[C exp belw]
+       for(var i=0;i < neighbours.length;i++)
+           {
+                 var neighbor = neighbours[i];
+                 if(!closedSet.includes(neighbour)){
+                        var tempG = current.g +1; //since we dont know its already processed,we store it in tempG            
+                    }
+                 var newPath = false; 
+                 if(openSet.includes(neighbour)) { // ...[C exp blpw]
+                       if(tempG < neighbour.g) {
+                          neighbour.g = tempG;
+                          newPath = true;
+                    }
+                 }
+                else {
+                      neighbour.g = tempG;
+                      newPath=true;
+                      openSet.push(neighbour);
+
+                   }
+                if(newPath) { //if newpath found , only then update its neighbour and other vals.
+                neighbour.h=heuristic(neighbour,end);  //...[D exp]
+                neighbour.f = neighbour.g + neighbour.h; //calculating f as well for that spot!
+                neighbour.previous = current; //we need to know the previous elem as well for remaping.
+                  } 
+          }
+   } else {
+       //no sol  
+        noLoop(); //terminate running loop.
+        return; // after terminating loop, we get out of func.
+    }
+   background(0);
+   for(var i=0;i<cols;i++) {
+      for(var j=0;j<rows;j++) {
+     grid[i][j].show(color(255)); //initializing a show method. where rectangle are created
+                 }
+
+            }
+
+  //now, for every elem in open set we keep a color.
+  //similarly for every elem in closedSet we keep a color
+
+
+  for(var i=0;i<closedSet.length;i++){
+     colsedSet[i].show(color(255,0,0));
+    }
+  for(var i=0;i<openSet.length;i++){
+     openSet[i].show(color(0,0,255));
+    }
+    //we backtrack and find that path fo reach spot.
+   var temp = current;
+   path.push(temp); //pushing it in path.
+   while(temp.previous) { //while we have a previous elem to go back
+         path.push(temp.previous);   //push all the previous elem so we keep on looping till initial spot of rendered path.
+         temp=temp.previous; 
+           }
+
+  //backtrack from the node we were interupted.   //...[E exp below ]
+     path=[];
+     var temp=current;
+     path.push(temp);
+     while(temp.previous) {
+         path.push(temp.previous);
+         temp = temp.previous;
+         }
+ 
+
+  for(var i=0;i<path.length;i++) {  //mapping out colors for all the nodes recorded in backtracking of desired path.
+   path[i].show(color(0,255,0));
+
+
+}
+/*
+---------------------
+A exp
+------------------
+//now, if openSet.length > 0 we find the point with
+// lowest(shortest route) value of f. once found, we del it
+// from cuurent set and add it in closedset
+
+-------------
+B exp-
+---------------
+//since we do not have an explicit function in javascript
+// for delteing an elem. we create a fucntion named
+//removeFromArray which is at top of code
+
+-------------
+C exp
+--------------
+BENCHMARK FOLLOW UP ON NEIGHBOURS G VALUE around 32minutes.
+for every single neighbour, what we do is add 1(since one is 
+the distance between every node and we record the distance
+between current node and neighbour,so its 1 here.) to g..
+if it is not present in closedSet
+and check out for the value which is minimal as we want
+to reach to bottom ASAP.
+NOTE: but if its already in the openSet, that means its
+already processed and has already a g value.
+so we compare which is minimal and declare that as neighbor.g
+but if it isnt in openset, that means its first direct value
+so we set neighbor.g directly to tempG and push it in openSet.
+
+-------------------
+D exp
+---------------------
+
+now, after recording the minimal node so far,
+we go for calculating heuristic[an educated guess as to
+how much cost will it incur to reach to end node from curent.]
+we use euclidena dist for this, jotted in function heuristic
+
+
+---------------------
+E exp
+--------------------
+
+now, if we put so many obstacles, there is a possiblity
+that nodes forming a path for the last node might be blocked
+and there can be no possible way to reach last, as all nodes 
+are blocked.
+so we keep a track of it, in the else block. if no sol.
+we set a flag.
+and if flag is set, what we do is, we stop loop 
+rather than traversing further
+we backtrack from that node itself.
+
+after we put return we dont need an extra variable for coming
+out of our fucc.
+
+
+*/
+A* algo : https://en.wikipedia.org/wiki/A*_search_algorithm
